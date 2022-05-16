@@ -33,7 +33,7 @@ public:
 
     void setParameter(VstInt32 index, float value) override;
 
-    static const VstInt32 numParameters = 1;
+    static const VstInt32 numParameters = 2;
 
 private:
     static const char* s_effectName;
@@ -41,7 +41,8 @@ private:
     static const char* s_productString;
 
     enum class Parameters {
-        vadThreshold = 0
+        vadThreshold = 0,
+        vadRelease = 1
     };    
     
     // Parameter: VAD Threshold
@@ -50,4 +51,9 @@ private:
     float paramVadThreshold{0.f};
 
     std::unique_ptr<RnNoiseCommonPlugin> m_rnNoisePlugin;
+    // Parameter: VAD Release
+    const char* paramVadReleaseLabel = "ms";
+    const char* paramVadReleaseName = "VAD Release";
+    short paramVadRelease{0};
+
 };

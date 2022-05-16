@@ -1,6 +1,7 @@
 #include "RnNoiseVstPlugin.h"
 
 #include <cstdio>
+#include <cmath>
 
 #include "common/RnNoiseCommonPlugin.h"
 
@@ -24,7 +25,7 @@ void RnNoiseVstPlugin::processReplacing(float **inputs, float **outputs, VstInt3
     float *inChannel0 = inputs[0];
     float *outChannel0 = outputs[0];
 
-    m_rnNoisePlugin->process(inChannel0, outChannel0, sampleFrames, paramVadThreshold);
+    m_rnNoisePlugin->process(inChannel0, outChannel0, sampleFrames, paramVadThreshold, paramVadRelease);
 }
 
 VstInt32 RnNoiseVstPlugin::startProcess() {
@@ -40,12 +41,17 @@ VstInt32 RnNoiseVstPlugin::stopProcess() {
 }
 
 bool RnNoiseVstPlugin::getEffectName(char *name) {
-    strcpy(name, s_effectName);
+    vst_strncpy(name, s_effectName, VstStringConstants::kVstMaxEffectNameLen);
+    return true;
+}
+
+bool RnNoiseVstPlugin::getVendorString(char *text) {
+    vst_strncpy(text, s_vendor, VstStringConstants::kVstMaxVendorStrLen);
     return true;
 }
 
 bool RnNoiseVstPlugin::getProductString(char *name) {
-    strcpy(name, s_productString);
+    vst_strncpy(name, s_productString, VstStringConstants::kVstMaxProductStrLen);
     return true;
 }
 
@@ -57,7 +63,10 @@ void RnNoiseVstPlugin::getParameterLabel(VstInt32 index, char* label) {
     const auto paramIdx = static_cast<Parameters>(index);
     switch (paramIdx) {
         case Parameters::vadThreshold:
-            strcpy(label, paramVadThresholdLabel);
+            vst_strncpy(label, paramVadThresholdLabel, VstStringConstants::kVstMaxParamStrLen);
+            break;
+        case Parameters::vadRelease:
+            vst_strncpy(label, paramVadReleaseLabel, VstStringConstants::kVstMaxParamStrLen);
             break;
     }
 }
@@ -66,7 +75,10 @@ void RnNoiseVstPlugin::getParameterName(VstInt32 index, char* label) {
     const auto paramIdx = static_cast<Parameters>(index);
     switch (paramIdx) {
         case Parameters::vadThreshold:
-            strcpy(label, paramVadThresholdName);
+            vst_strncpy(label, paramVadThresholdName, VstStringConstants::kVstMaxEffectNameLen);
+            break;
+        case Parameters::vadRelease:
+            vst_strncpy(label, paramVadReleaseName, VstStringConstants::kVstMaxEffectNameLen);
             break;
     }
 }
@@ -75,7 +87,10 @@ void RnNoiseVstPlugin::getParameterDisplay(VstInt32 index, char* label) {
     const auto paramIdx = static_cast<Parameters>(index);
     switch (paramIdx) {
         case Parameters::vadThreshold:
-            snprintf(label, VstStringConstants::kVstMaxParamStrLen, "%.3f", paramVadThreshold);
+            snprintf(label, VstStringConstants::kVstMaxParamStrLen, "%.2f", paramVadThreshold);
+            break;
+        case Parameters::vadRelease:
+            snprintf(label, VstStringConstants::kVstMaxParamStrLen, "%.3d", paramVadRelease * 10);
             break;
     }
 }
@@ -84,6 +99,7 @@ float RnNoiseVstPlugin::getParameter(VstInt32 index) {
     const auto paramIdx = static_cast<Parameters>(index);
     switch (paramIdx) {
         case Parameters::vadThreshold: return paramVadThreshold;
+        case Parameters::vadRelease: return paramVadRelease / 1000.f * 10;
     }
     return 1;
 }
@@ -94,6 +110,9 @@ void RnNoiseVstPlugin::setParameter(VstInt32 index, float value) {
     {
         case Parameters::vadThreshold:
             paramVadThreshold = value;
+            break;
+        case Parameters::vadRelease:
+            paramVadRelease = (short)(value * 1000 / 10);
             break;
     }
 }
