@@ -20,3 +20,4 @@ src/vst_plugin/pluginterfaces/vst2.x/*.h
 
 *.dll
 *.a
+CMakeSettings.json
