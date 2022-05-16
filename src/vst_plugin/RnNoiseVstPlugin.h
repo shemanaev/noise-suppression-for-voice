@@ -21,6 +21,8 @@ public:
 
     bool getEffectName(char *name) override;
 
+    bool getVendorString (char* text) override;
+
     bool getProductString(char *name) override;
 
     void getParameterLabel(VstInt32 index, char* label) override;
@@ -40,6 +42,8 @@ private:
 
     static const char* s_productString;
 
+    static const char* s_vendor;
+
     enum class Parameters {
         vadThreshold = 0,
         vadRelease = 1
@@ -50,10 +54,12 @@ private:
     const char* paramVadThresholdName = "VAD Threshold";
     float paramVadThreshold{0.f};
 
-    std::unique_ptr<RnNoiseCommonPlugin> m_rnNoisePlugin;
     // Parameter: VAD Release
     const char* paramVadReleaseLabel = "ms";
     const char* paramVadReleaseName = "VAD Release";
     short paramVadRelease{0};
 
+    const int channels = 2;
+     
+    std::vector<std::unique_ptr<RnNoiseCommonPlugin>> m_rnNoisePlugin;
 };
