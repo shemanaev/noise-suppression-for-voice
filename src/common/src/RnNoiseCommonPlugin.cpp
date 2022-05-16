@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cassert>
 
-#include <rnnoise/rnnoise.h>
+#include <rnnoise.h>
 
 void RnNoiseCommonPlugin::init() {
     deinit();
@@ -111,7 +111,7 @@ void RnNoiseCommonPlugin::process(const float *in, float *out, int32_t sampleFra
 }
 
 void RnNoiseCommonPlugin::createDenoiseState() {
-    m_denoiseState = std::shared_ptr<DenoiseState>(rnnoise_create(), [](DenoiseState *st) {
+    m_denoiseState = std::shared_ptr<DenoiseState>(rnnoise_create(NULL), [](DenoiseState *st) {
         rnnoise_destroy(st);
     });
 }

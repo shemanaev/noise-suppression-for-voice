@@ -1,13 +1,16 @@
-/* Copyright (c) 2017 Mozilla */
+/* Copyright (c) 2017 Jean-Marc Valin */
 /*
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
+
    - Redistributions of source code must retain the above copyright
    notice, this list of conditions and the following disclaimer.
+
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -21,50 +24,52 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdio.h>
-#include "rnnoise/rnnoise.h"
+#ifndef RNN_H_
+#define RNN_H_
 
-#define FRAME_SIZE 480
+#include "rnnoise.h"
 
-int main(int argc, char **argv) {
-    int first = 1;
-    float x[FRAME_SIZE];
-    FILE *f1, *fout;
-    DenoiseState *st;
-    st = rnnoise_create();
-    if (argc != 3) {
-        fprintf(stderr, "usage: %s <noisy speech> <output denoised>\n", argv[0]);
-        return 1;
-    }
-    f1 = fopen(argv[1], "rb");
-    fout = fopen(argv[2], "wb");
+#include "opus_types.h"
 
-    short tmp[FRAME_SIZE] = {0};
+#define WEIGHTS_SCALE (1.f/256)
 
-    while (1) {
-        fread(tmp, sizeof(short), FRAME_SIZE, f1);
-        if (feof(f1)) {
-            break;
-        }
+#define MAX_NEURONS 128
 
-        for (int i = 0; i < FRAME_SIZE; i++) {
-            x[i] = tmp[i];
-        }
+#define ACTIVATION_TANH    0
+#define ACTIVATION_SIGMOID 1
+#define ACTIVATION_RELU    2
 
-        rnnoise_process_frame(st, x, x);
-        //printf("%li processed", ftell(f1));
-        for (int i = 0; i < FRAME_SIZE; i++) {
-            tmp[i] = x[i];
-        }
+typedef signed char rnn_weight;
 
-        if (!first) {
-            fwrite(tmp, sizeof(short), FRAME_SIZE, fout);
-        }
+typedef struct {
+  const rnn_weight *bias;
+  const rnn_weight *input_weights;
+  int nb_inputs;
+  int nb_neurons;
+  int activation;
+} DenseLayer;
 
-        first = 0;
-    }
-    rnnoise_destroy(st);
-    fclose(f1);
-    fclose(fout);
-    return 0;
-}
+typedef struct {
+  const rnn_weight *bias;
+  const rnn_weight *input_weights;
+  const rnn_weight *recurrent_weights;
+  int nb_inputs;
+  int nb_neurons;
+  int activation;
+} GRULayer;
+
+typedef struct RNNState RNNState;
+
+int is_avx2_supported();
+
+void compute_dense(const DenseLayer *layer, float *output, const float *input);
+
+void compute_gru(const GRULayer *gru, float *state, const float *input);
+
+#if defined(__AVX2__)
+void compute_gru_avx2(const GRULayer* gru, float* state, const float* input);
+#endif
+
+void compute_rnn(RNNState *rnn, float *gains, float *vad, const float *input);
+
+#endif /* RNN_H_ */
