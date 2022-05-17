@@ -2,6 +2,12 @@
 
 A real-time noise suppression plugin for voice based on [Xiph's RNNoise](https://github.com/xiph/rnnoise). [More info about the base library](https://people.xiph.org/~jm/demo/rnnoise/).
 
+## Fork differences
+
+* Upstream rnnoise with [AVX2 patch](https://github.com/xiph/rnnoise/pull/191) and additional models from [GregoR](https://github.com/GregorR/rnnoise-nu)
+* Configuration GUI using [Dear ImGui](https://github.com/ocornut/imgui)
+* Make it STEREO (for good or bad, but sometimes you'll hear those independence)
+
 ## About
 
 The plugin is meant to suppress a wide range of noise origins ([from original paper](https://arxiv.org/pdf/1709.08243.pdf)): computer fans, office, crowd, airplane, car, train, construction. 
