@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <cmath>
+#include <sstream>
 
 #include "common/RnNoiseCommonPlugin.h"
 
@@ -10,11 +11,16 @@ const char *RnNoiseVstPlugin::s_productString = "Noise Suppression";
 const char *RnNoiseVstPlugin::s_vendor = "shemanaev";
 
 RnNoiseVstPlugin::RnNoiseVstPlugin(audioMasterCallback audioMaster, VstInt32 numPrograms, VstInt32 numParams)
-        : AudioEffectX(audioMaster, numPrograms, numParams) {
+    : AudioEffectX(audioMaster, numPrograms, numParams)
+{
     setNumInputs(channels);
     setNumOutputs(channels);
     setUniqueID(366057);
+    programsAreChunks(true);
     canProcessReplacing(); // supports replacing mode
+    
+    m_editor = new Editor(this);
+    setEditor(m_editor);
 
     for (int i = 0; i < channels; i++)
         m_rnNoisePlugin.push_back(std::make_unique<RnNoiseCommonPlugin>());
@@ -116,4 +122,40 @@ void RnNoiseVstPlugin::setParameter(VstInt32 index, float value) {
             paramVadRelease = (short)(value * 1000 / 10);
             break;
     }
+}
+
+VstInt32 RnNoiseVstPlugin::getChunk(void** data, bool isPreset) {
+    std::stringstream s;
+    s << std::to_string(paramVadThreshold)  << std::endl << std::to_string(paramVadRelease) << std::endl << getCurrentModel();
+    m_settings = s.str();
+    *data = static_cast<void*>(&m_settings[0]);
+    return static_cast<VstInt32>(m_settings.length());
+}
+
+VstInt32 RnNoiseVstPlugin::setChunk(void* data, VstInt32 byteSize, bool isPreset) {
+    m_settings.assign(static_cast<char*>(data), byteSize);
+    std::stringstream s(m_settings);
+    std::string vadThreshold, vadRelease, model;
+
+    s >> vadThreshold >> vadRelease >> model;
+
+    paramVadThreshold = std::stof(vadThreshold);
+    paramVadRelease = std::stoi(vadRelease);
+    setModel(model);
+
+    return 0; // error code: https://www.kvraudio.com/forum/viewtopic.php?p=5639784&sid=08f756e80d6209008b7b5d29042c07fe#p5639784
+}
+
+const std::string& RnNoiseVstPlugin::getCurrentModel() {
+    return m_rnNoisePlugin[0]->getCurrentModel();
+}
+
+void RnNoiseVstPlugin::setModel(std::string name) {
+    for (auto& it : m_rnNoisePlugin) {
+        it->setModel(name);
+    }
+}
+
+const std::vector<std::string> RnNoiseVstPlugin::getAvailableModels() {
+    return RnNoiseCommonPlugin::getAvailableModels();
 }

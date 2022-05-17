@@ -1,7 +1,10 @@
 #pragma once
 
+#include <mutex>
 #include <memory>
+#include <string>
 #include <vector>
+#include <unordered_map>
 
 struct DenoiseState;
 
@@ -13,6 +16,12 @@ public:
     void deinit();
 
     void process(const float *in, float *out, int32_t sampleFrames, float vadThreshold, short vadRelease = k_vadGracePeriodSamples);
+
+    void setModel(const std::string name);
+
+    const std::string& getCurrentModel() { return m_model; }
+
+    static const std::vector<std::string>& getAvailableModels();
 
 private:
 
@@ -29,7 +38,9 @@ private:
      */
     static const short k_vadGracePeriodSamples = 20;
 
+    std::mutex m_stateLock;
     std::shared_ptr<DenoiseState> m_denoiseState;
+    std::string m_model{ "default" };
 
     short m_remainingGracePeriod = 0;
 

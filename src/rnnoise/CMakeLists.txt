@@ -15,13 +15,21 @@ set(RN_NOISE_SRC
         include/rnn_data.h
         include/rnnoise.h
         include/tansig_table.h
+        include/rnnoise-nu.h
         src/celt_lpc.c
         src/denoise.c
         src/kiss_fft.c
         src/pitch.c
         src/rnn.c
         src/rnn_data.c
-        src/rnn_reader.c)
+        src/rnn_reader.c
+        src/models.c
+        src/models/bd.c
+        src/models/cb.c
+        src/models/lq.c
+        src/models/mp.c
+        src/models/sh.c
+)
 
 add_library(RnNoise STATIC ${RN_NOISE_SRC})
 

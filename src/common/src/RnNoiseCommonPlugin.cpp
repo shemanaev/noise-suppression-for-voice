@@ -6,7 +6,29 @@
 #include <algorithm>
 #include <cassert>
 
+
 #include <rnnoise.h>
+#include <rnnoise-nu.h>
+
+static const std::unordered_map<std::string, std::string> g_modelsMap = {
+    {"default", "orig"},
+    {"beguiling-drafter-2018-08-30", "bd"},
+    {"conjoined-burgers-2018-08-28", "cb"},
+    {"leavened-quisling-2018-08-31", "lq"},
+    {"marathon-prescription-2018-08-29", "mp"},
+    {"somnolent-hogwash-2018-09-01", "sh"}
+};
+
+static const std::vector<std::string> g_models = {
+    "default",
+    "beguiling-drafter-2018-08-30",
+    "conjoined-burgers-2018-08-28",
+    "leavened-quisling-2018-08-31",
+    "marathon-prescription-2018-08-29", 
+    "somnolent-hogwash-2018-09-01", 
+};
+
+const std::vector<std::string>& RnNoiseCommonPlugin::getAvailableModels() { return g_models; }
 
 void RnNoiseCommonPlugin::init() {
     deinit();
@@ -14,7 +36,16 @@ void RnNoiseCommonPlugin::init() {
 }
 
 void RnNoiseCommonPlugin::deinit() {
+    std::lock_guard<std::mutex> guard(m_stateLock);
     m_denoiseState.reset();
+}
+
+void RnNoiseCommonPlugin::setModel(const std::string name) {
+    if (name != m_model) {
+        std::lock_guard<std::mutex> guard(m_stateLock);
+        m_model = name;
+        m_denoiseState.reset();
+    }
 }
 
 void RnNoiseCommonPlugin::process(const float *in, float *out, int32_t sampleFrames, float vadThreshold, short vadRelease) {
@@ -27,6 +58,8 @@ void RnNoiseCommonPlugin::process(const float *in, float *out, int32_t sampleFra
     if (!m_denoiseState) {
         createDenoiseState();
     }
+
+    std::lock_guard<std::mutex> guard(m_stateLock);
 
     // Good case, we can copy less data around and rnnoise lib is built for it
     if (sampleFrames == k_denoiseFrameSize) {
@@ -111,7 +144,13 @@ void RnNoiseCommonPlugin::process(const float *in, float *out, int32_t sampleFra
 }
 
 void RnNoiseCommonPlugin::createDenoiseState() {
-    m_denoiseState = std::shared_ptr<DenoiseState>(rnnoise_create(NULL), [](DenoiseState *st) {
+    std::lock_guard<std::mutex> guard(m_stateLock);
+    RNNModel* model = nullptr;
+    auto it = g_modelsMap.find(m_model);
+    if (it != g_modelsMap.end()) {
+        model = rnnoise_get_model(it->second.c_str());
+    }
+    m_denoiseState = std::shared_ptr<DenoiseState>(rnnoise_create(model), [](DenoiseState *st) {
         rnnoise_destroy(st);
     });
 }

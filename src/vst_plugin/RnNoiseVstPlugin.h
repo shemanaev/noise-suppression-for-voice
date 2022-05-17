@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include "vst2.x/audioeffectx.h"
+#include "Editor.h"
 
 class RnNoiseCommonPlugin;
 
@@ -37,6 +38,24 @@ public:
 
     static const VstInt32 numParameters = 1;
 
+    VstInt32 getChunk(void** data, bool isPreset = false) override;
+
+    VstInt32 setChunk(void* data, VstInt32 byteSize, bool isPreset = false) override;
+
+    float getVadThreshold() { return paramVadThreshold; }
+
+    void setVadThreshold(float value) { paramVadThreshold = value; }
+
+    int getVadRelease() { return paramVadRelease * 10; }
+
+    void setVadRelease(int value) { paramVadRelease = static_cast<short>(value / 10); }
+
+    const std::string& getCurrentModel();
+
+    void setModel(std::string name);
+
+    const std::vector<std::string> getAvailableModels();
+
 private:
     static const char* s_effectName;
 
@@ -62,4 +81,6 @@ private:
     const int channels = 2;
      
     std::vector<std::unique_ptr<RnNoiseCommonPlugin>> m_rnNoisePlugin;
+    Editor* m_editor;
+    std::string m_settings;
 };
