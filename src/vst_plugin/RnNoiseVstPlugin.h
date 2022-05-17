@@ -35,7 +35,7 @@ public:
 
     void setParameter(VstInt32 index, float value) override;
 
-    static const VstInt32 numParameters = 2;
+    static const VstInt32 numParameters = 1;
 
 private:
     static const char* s_effectName;
@@ -57,7 +57,7 @@ private:
     // Parameter: VAD Release
     const char* paramVadReleaseLabel = "ms";
     const char* paramVadReleaseName = "VAD Release";
-    short paramVadRelease{0};
+    short paramVadRelease{35};
 
     const int channels = 2;
      
