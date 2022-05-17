@@ -1,5 +1,5 @@
 project("Real-time Noise Suppression Plugin")
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.15)
 
 include(GNUInstallDirs)
 
@@ -11,7 +11,12 @@ set(MINGW_ADDITIONAL_LINKING_FLAGS "-static-libgcc -static-libstdc++ -Wl,-Bstati
 
 option(BUILD_VST_PLUGIN "If the VST plugin should be built" ON)
 option(BUILD_LV2_PLUGIN "If the LV2 plugin should be built" ON)
-option(BUILD_LADSPA_PLUGIN "If the LADSPA plugin should be built" ON)
+option(BUILD_LADSPA_PLUGIN "If the LADSPA plugin should be built" BUILD_LADSPA)
+
+if(MSVC)
+    # Temporarily disable as it fails
+    set(BUILD_LADSPA_PLUGIN OFF)
+endif()
 
 add_subdirectory(src/rnnoise)
 add_subdirectory(src/common)
